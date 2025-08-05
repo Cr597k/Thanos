@@ -1,0 +1,496 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thanos Html</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/dracula.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/closetag.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/closebrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/html-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/css-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/javascript-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/lint/lint.min.js"></script>
+    <style>
+        .CodeMirror {
+            height: 100% !important;
+            font-size: 14px;
+        }
+        .CodeMirror-hints {
+            z-index: 10000 !important;
+        }
+        #preview {
+            height: 100%;
+            width: 100%;
+            border: none;
+            background: whete;
+        }
+        .editor-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            background-color:gray;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .sidebar {
+            width: 40px;
+            background-color: #252526;
+            transition: width 0.3s;
+        }
+        .sidebar:hover {
+            width: 200px;
+        }
+        .sidebar-item {
+            padding: 10px;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .sidebar-item:hover {
+            background-color:silver ;
+        }
+        .sidebar-item i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        .toolbar-button {
+            background: none;
+            border: none;
+            color:  #2a2d2e;
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .toolbar-button:hover {
+            background-color: #2a2d2e;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #252526;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 4px;
+        }
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        .dropdown-item {
+            color: #e0e0e0;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            cursor: pointer;
+        }
+        .dropdown-item:hover {
+            background-color: #2a2d2e;
+        }
+        .settings-panel {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 40px;
+            width: 300px;
+            height: calc(100% - 40px);
+            background-color: #252526;
+            z-index: 100;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.2);
+            padding: 15px;
+            overflow-y: auto;
+        }
+        .settings-option {
+            margin-bottom: 15px;
+        }
+        .settings-option label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .settings-option select, .settings-option input {
+            width: 100%;
+            padding: 5px;
+            background-color: #1e1e1e;
+            border: 1px solid #3e3e42;
+            color: #e0e0e0;
+        }
+        .flex-grow {
+            flex-grow: 1;
+        }
+        #runner-container {
+            position: fixed;
+            bottom: 0;
+            right: 300px;
+            width: 400px;
+            height: 300px;
+            background-color: #1e1e1e;
+            border-top: 1px solid #3e3e42;
+            z-index: 99;
+            display: none;
+            flex-direction: column;
+        }
+        #runner-header {
+            padding: 5px 10px;
+            background-color: #252526;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #runner-content {
+            flex-grow: 1;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body class="flex">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-item" onclick="newFile()">
+            <i>📄</i> <span>New File</span>
+        </div>
+        <div class="sidebar-item" onclick="loadFile()">
+            <i>📂</i> <span>Open File</span>
+        </div>
+        <div class="sidebar-item" onclick="saveFile()">
+            <i>💾</i> <span>Save</span>
+        </div>
+        <div class="sidebar-item" onclick="toggleRunner()">
+            <i>▶️</i> <span>Run Code</span>
+        </div>
+        <div class="sidebar-item" onclick="toggleSettings()">
+            <i>⚙️</i> <span>Settings</span>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-grow flex flex-col">
+        <!-- Toolbar -->
+        <div class="bg-#333333 flex p-2 border-b border-gray-800">
+            <div class="dropdown">
+                <button class="toolbar-button">File</button>
+                <div class="dropdown-content">
+                    <div class="dropdown-item" onclick="newFile()">New</div>
+                    <div class="dropdown-item" onclick="loadFile()">Open</div>
+                    <div class="dropdown-item" onclick="saveFile()">Save</div>
+                </div>
+            </div>
+            <div class="dropdown">
+                <button class="toolbar-button">Edit</button>
+                <div class="dropdown-content">
+                    <div class="dropdown-item" onclick="editor.execCommand('undo')">Undo</div>
+                    <div class="dropdown-item" onclick="editor.execCommand('redo')">Redo</div>
+                    <div class="dropdown-item" onclick="editor.execCommand('selectAll')">Select All</div>
+                </div>
+            </div>
+            <div class="dropdown">
+                <button class="toolbar-button">View</button>
+                <div class="dropdown-content">
+                    <div class="dropdown-item" onclick="toggleRunner()">Toggle Runner</div>
+                    <div class="dropdown-item" onclick="changeTheme('dracula')">Dark Theme</div>
+                    <div class="dropdown-item" onclick="changeTheme('default')">Light Theme</div>
+                </div>
+            </div>
+            <button class="toolbar-button ml-auto" onclick="runCode()">
+                ▶ Run
+            </button>
+            <button class="toolbar-button" onclick="toggleSettings()">
+                ⚙ Settings
+            </button>
+        </div>
+
+        <!-- Editor -->
+        <div class="editor-container flex-grow flex">
+            <div class="flex-grow">
+                <textarea id="editor" class="w-full h-full"></textarea>
+            </div>
+            <div class="flex-grow bg-white">
+                <iframe id="preview" class="w-full h-full"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Panel -->
+    <div id="settings-panel" class="settings-panel">
+        <h2 class="text-xl mb-4">Settings</h2>
+        
+        <div class="settings-option">
+            <label for="theme-select">Editor Theme</label>
+            <select id="theme-select" onchange="changeTheme(this.value)">
+                <option value="dracula">Dracula (Dark)</option>
+                <option value="default">Default (Light)</option>
+                <option value="monokai">Monokai</option>
+                <option value="solarized dark">Solarized Dark</option>
+                <option value="solarized light">Solarized Light</option>
+            </select>
+        </div>
+
+        <div class="settings-option">
+            <label for="font-size">Font Size</label>
+            <input type="range" id="font-size" min="10" max="24" value="14" onchange="changeFontSize(this.value)">
+            <span id="font-size-value">14px</span>
+        </div>
+
+        <div class="settings-option">
+            <label for="tab-size">Tab Size</label>
+            <input type="range" id="tab-size" min="2" max="8" step="2" value="4" onchange="changeTabSize(this.value)">
+            <span id="tab-size-value">4</span>
+        </div>
+
+        <div class="settings-option">
+            <label>
+                <input type="checkbox" id="line-numbers" checked onchange="toggleLineNumbers(this.checked)"> Show Line Numbers
+            </label>
+        </div>
+
+        <div class="settings-option">
+            <label>
+                <input type="checkbox" id="auto-close-tags" checked onchange="toggleAutoCloseTags(this.checked)"> Auto Close Tags
+            </label>
+        </div>
+
+        <div class="settings-option">
+            <label>
+                <input type="checkbox" id="auto-complete" checked onchange="toggleAutoComplete(this.checked)"> Auto Complete
+            </label>
+        </div>
+
+        <div class="settings-option">
+            <label>
+                <input type="checkbox" id="auto-run" onchange="toggleAutoRun(this.checked)"> Auto Run on Change
+            </label>
+        </div>
+    </div>
+
+    <!-- Runner Panel -->
+    <div id="runner-container" class="flex flex-col">
+        <div id="runner-header">
+            <span>Code Runner</span>
+            <button class="toolbar-button" onclick="toggleRunner()">✕</button>
+        </div>
+        <div id="runner-content">
+            <iframe id="runner" class="w-full h-full"></iframe>
+        </div>
+    </div>
+
+    <script>
+        // Initialize CodeMirror editor
+        let editor = CodeMirror.fromTextArea(document.getElementById('editor'), {
+            mode: 'htmlmixed',
+            theme: 'dracula',
+            lineNumbers: true,
+            autoCloseTags: true,
+            autoCloseBrackets: true,
+            extraKeys: {
+                'Ctrl-Space': 'autocomplete',
+                'Ctrl-Enter': runCode,
+                'Ctrl-/': 'toggleComment'
+            },
+            tabSize: 4,
+            indentUnit: 4,
+            lineWrapping: true
+        });
+
+        // Set initial content
+        editor.setValue(`<!DOCTYPE html>
+<html>
+<head>
+      <title>My Page
+      </title>
+  </head>
+<body>
+    <h1>Hello World!</h1>
+       <h2>Hello World!</h2>
+           <h3>Hello World!</h3>
+               <h4>Hello World!</h4>
+                   <h5>Hello World!</h5>
+                       <h6>Hello World!</h6>
+   
+</body>
+</html>`);
+
+        // Variables
+        let autoRunEnabled = false;
+        let currentFileName = 'index.html';
+
+        // Function to run the code
+        function runCode() {
+            const code = editor.getValue();
+            const preview = document.getElementById('preview');
+            preview.srcdoc = code;
+            
+            // Also update the runner if visible
+            const runner = document.getElementById('runner');
+            if (runner) {
+                runner.srcdoc = code;
+            }
+        }
+
+        // Function to toggle the runner panel
+        function toggleRunner() {
+            const runner = document.getElementById('runner-container');
+            runner.style.display = runner.style.display === 'flex' ? 'none' : 'flex';
+            
+            // If showing, run the code
+            if (runner.style.display === 'flex') {
+                runCode();
+            }
+        }
+
+        // Function to toggle settings panel
+        function toggleSettings() {
+            const settings = document.getElementById('settings-panel');
+            settings.style.display = settings.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // Function to change editor theme
+        function changeTheme(theme) {
+            editor.setOption('theme', theme);
+            document.getElementById('theme-select').value = theme;
+        }
+
+        // Function to change font size
+        function changeFontSize(size) {
+            const editorElement = document.querySelector('.CodeMirror');
+            editorElement.style.fontSize = size + 'px';
+            document.getElementById('font-size-value').textContent = size + 'px';
+        }
+
+        // Function to change tab size
+        function changeTabSize(size) {
+            editor.setOption('tabSize', parseInt(size));
+            document.getElementById('tab-size-value').textContent = size;
+        }
+
+        // Function to toggle line numbers
+        function toggleLineNumbers(show) {
+            editor.setOption('lineNumbers', show);
+        }
+
+        // Function to toggle auto close tags
+        function toggleAutoCloseTags(enable) {
+            editor.setOption('autoCloseTags', enable);
+        }
+
+        // Function to toggle auto complete
+        function toggleAutoComplete(enable) {
+            editor.setOption('extraKeys', enable ? {
+                'Ctrl-Space': 'autocomplete',
+                'Ctrl-Enter': runCode,
+                'Ctrl-/': 'toggleComment'
+            } : {
+                'Ctrl-Enter': runCode,
+                'Ctrl-/': 'toggleComment'
+            });
+        }
+
+        // Function to toggle auto run
+        function toggleAutoRun(enable) {
+            autoRunEnabled = enable;
+            if (enable) {
+                runCode();
+            }
+        }
+
+        // New file function
+        function newFile() {
+            editor.setValue(`<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Document</title>
+</head>
+<body>
+    
+</body>
+</html>`);
+            currentFileName = 'untitled.html';
+        }
+
+        // Save file function
+        function saveFile() {
+            const code = editor.getValue();
+            const blob = new Blob([code], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = currentFileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Load file function
+        function loadFile() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.html,.htm,.txt';
+            
+            input.onchange = e => {
+                const file = e.target.files[0];
+                currentFileName = file.name;
+                
+                const reader = new FileReader();
+                reader.onload = e => {
+                    editor.setValue(e.target.result);
+                    if (autoRunEnabled) {
+                        runCode();
+                    }
+                };
+                reader.readAsText(file);
+            };
+            
+            input.click();
+        }
+
+        // Auto-run on content change
+        editor.on('change', () => {
+            if (autoRunEnabled) {
+                runCode();
+            }
+        });
+
+        // Run the code initially
+        runCode();
+
+        // Close settings when clicking outside
+        document.addEventListener('click', (e) => {
+            const settings = document.getElementById('settings-panel');
+            const settingsButton = document.querySelector('[onclick="toggleSettings()"]');
+            
+            if (settings.style.display === 'block' && 
+                !settings.contains(e.target) && 
+                e.target !== settingsButton && 
+                !settingsButton.contains(e.target)) {
+                settings.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
